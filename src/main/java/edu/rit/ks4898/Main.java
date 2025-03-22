@@ -1,21 +1,18 @@
 package edu.rit.ks4898;
 
 import io.javalin.Javalin;
-import io.javalin.community.ssl.SslPlugin;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.NotFoundResponse;
 
 public class Main {
     public static void main(String[] args) {
-        SslPlugin sslPlugin = new SslPlugin(ssl -> {
-            ssl.keystoreFromPath("keystore.p12", "your_keystore_password");
-        });
-
         Javalin app = Javalin.create(config -> {
-            config.plugins.register(sslPlugin);
+            config.plugins.enableSslRedirects();
+            config.jetty.ssl(ssl -> {
+                ssl.pemFromPath("cert.pem", "key.pem");
+            });
         }).start(7000);
 
-        // Your existing route definitions here
         app.get("/tasks", ctx -> ctx.json(TaskRepository.getAllTasks()));
 
         app.get("/tasks/{id}", ctx -> {
@@ -44,3 +41,4 @@ public class Main {
         });
     }
 }
+
