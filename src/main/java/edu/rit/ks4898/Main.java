@@ -3,14 +3,17 @@ package edu.rit.ks4898;
 import io.javalin.Javalin;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.NotFoundResponse;
+import io.javalin.community.ssl.SslPlugin;
 
 public class Main {
     public static void main(String[] args) {
+        SslPlugin sslPlugin = new SslPlugin(ssl -> {
+            ssl.pemFromPath("cert.pem", "key.pem");
+        });
+
         Javalin app = Javalin.create(config -> {
+            config.plugins.register(sslPlugin);
             config.plugins.enableSslRedirects();
-            config.jetty.ssl(ssl -> {
-                ssl.pemFromPath("cert.pem", "key.pem");
-            });
         }).start(7000);
 
         app.get("/tasks", ctx -> ctx.json(TaskRepository.getAllTasks()));
@@ -41,4 +44,3 @@ public class Main {
         });
     }
 }
-
