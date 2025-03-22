@@ -9,6 +9,7 @@ import io.javalin.http.NotFoundResponse;
 
 public class Main {
     public static void main(String[] args) {
+        System.setProperty("jsse.enableSNIExtension", "false");
         Javalin app = Javalin.create(config -> {
             config.jetty.modifyServer(server -> {
                 ServerConnector sslConnector = new ServerConnector(server, getSslContextFactory());
@@ -49,6 +50,9 @@ public class Main {
         SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
         sslContextFactory.setKeyStorePath("keystore.jks");
         sslContextFactory.setKeyStorePassword("javalinhttps");
+        sslContextFactory.setEndpointIdentificationAlgorithm(null);
+        sslContextFactory.setSniRequired(false);
         return sslContextFactory;
     }
+    
 }
