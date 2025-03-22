@@ -1,19 +1,20 @@
 package edu.rit.ks4898;
 
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
+
 import io.javalin.Javalin;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.NotFoundResponse;
-import io.javalin.community.ssl.SslPlugin;
 
 public class Main {
     public static void main(String[] args) {
-        SslPlugin sslPlugin = new SslPlugin(ssl -> {
-            ssl.pemFromPath("cert.pem", "key.pem");
-        });
-
         Javalin app = Javalin.create(config -> {
-            config.plugins.register(sslPlugin);
-            config.plugins.enableSslRedirects();
+            config.jetty.modifyServer(server -> {
+                ServerConnector sslConnector = new ServerConnector(server, getSslContextFactory());
+                sslConnector.setPort(7000);
+                server.addConnector(sslConnector);
+            });
         }).start(7000);
 
         app.get("/tasks", ctx -> ctx.json(TaskRepository.getAllTasks()));
@@ -42,5 +43,12 @@ public class Main {
             TaskRepository.deleteTask(ctx.pathParam("id"));
             ctx.status(204);
         });
+    }
+
+    private static SslContextFactory.Server getSslContextFactory() {
+        SslContextFactory.Server sslContextFactory = new SslContextFactory.Server();
+        sslContextFactory.setKeyStorePath("keystore.jks");
+        sslContextFactory.setKeyStorePassword("javalinhttps");
+        return sslContextFactory;
     }
 }
