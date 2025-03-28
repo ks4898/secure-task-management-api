@@ -32,22 +32,35 @@ public class Main {
 
         app.post("/tasks", ctx -> {
             Task task = ctx.bodyAsClass(Task.class);
-            TaskRepository.addTask(task);
-            ctx.status(201).json(task);
+            if (isValidTask(task)) {
+                TaskRepository.addTask(task);
+                ctx.status(201).json(task);
+            } else {
+                ctx.status(400).json(new BadRequestResponse("Invalid task data"));
+            }
         });
 
         app.put("/tasks/{id}", ctx -> {
             String taskId = ctx.pathParam("id");
             Task updatedTask = ctx.bodyAsClass(Task.class);
-            if (!taskId.equals(updatedTask.getId())) throw new BadRequestResponse("Task ID mismatch");
-            TaskRepository.updateTask(updatedTask);
-            ctx.json(updatedTask);
+            if (isValidTask(updatedTask) && taskId.equals(updatedTask.getId())) {
+                TaskRepository.updateTask(updatedTask);
+                ctx.json(updatedTask);
+            } else {
+                ctx.status(400).json(new BadRequestResponse("Invalid task data or ID mismatch"));
+            }
         });
 
         app.delete("/tasks/{id}", ctx -> {
             TaskRepository.deleteTask(ctx.pathParam("id"));
             ctx.status(204);
         });
+    }
+
+    private static boolean isValidTask(Task task) {
+        return task != null
+            && task.getTitle() != null && !task.getTitle().trim().isEmpty()
+            && task.getDescription() != null;
     }
 
     private static SslContextFactory.Server getSslContextFactory() {

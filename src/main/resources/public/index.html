@@ -1,16 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Task Management API</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-        h1 { color: #333; }
-        #taskList { list-style-type: none; padding: 0; }
-        #taskList li { background-color: #f0f0f0; margin: 10px 0; padding: 10px; border-radius: 5px; }
-        #addTaskForm { margin-top: 20px; }
-        input, button { margin: 5px 0; padding: 5px; }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #taskList {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #taskList li {
+            background-color: #f0f0f0;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #addTaskForm {
+            margin-top: 20px;
+        }
+
+        input,
+        button {
+            margin: 5px 0;
+            padding: 5px;
+        }
+
         .delete-btn {
             background-color: #ff4444;
             color: white;
@@ -21,17 +49,30 @@
         }
     </style>
 </head>
+
 <body>
     <h1>Secure Task Management API</h1>
     <ul id="taskList"></ul>
     <form id="addTaskForm">
         <input type="text" id="taskTitle" placeholder="Task Title" required>
         <input type="text" id="taskDescription" placeholder="Task Description" required>
+        <label>
+            <input type="checkbox" id="taskCompleted"> Completed
+        </label>
         <button type="submit">Add Task</button>
     </form>
 
     <script>
         const apiUrl = 'https://localhost:7000';
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
 
         async function fetchTasks() {
             const response = await fetch(`${apiUrl}/tasks`);
@@ -40,23 +81,45 @@
             taskList.innerHTML = '';
             tasks.forEach(task => {
                 const li = document.createElement('li');
-                li.textContent = `${task.title}: ${task.description}`;
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'Delete';
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.onclick = () => deleteTask(task.id);
-                li.appendChild(deleteBtn);
+                li.innerHTML = `
+            <strong>${escapeHtml(task.title)}</strong>: ${escapeHtml(task.description)}
+            <br>Completed: ${task.completed ? 'Yes' : 'No'}
+            <button onclick="editTask('${task.id}')">Edit</button>
+            <button onclick="deleteTask('${task.id}')">Delete</button>
+        `;
                 taskList.appendChild(li);
             });
         }
 
-        async function addTask(title, description) {
+
+        async function addTask(title, description, completed) {
             await fetch(`${apiUrl}/tasks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ title, description })
+                body: JSON.stringify({ title, description, completed })
             });
             fetchTasks();
+        }
+
+        async function editTask(id) {
+            const task = await fetchTask(id);
+            const title = prompt('Enter new title:', task.title);
+            const description = prompt('Enter new description:', task.description);
+            const completed = confirm('Is the task completed?');
+
+            if (title !== null && description !== null) {
+                await fetch(`${apiUrl}/tasks/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, title, description, completed })
+                });
+                fetchTasks();
+            }
+        }
+
+        async function fetchTask(id) {
+            const response = await fetch(`${apiUrl}/tasks/${id}`);
+            return await response.json();
         }
 
         async function deleteTask(id) {
@@ -68,11 +131,13 @@
             e.preventDefault();
             const title = document.getElementById('taskTitle').value;
             const description = document.getElementById('taskDescription').value;
-            await addTask(title, description);
+            const completed = document.getElementById('taskCompleted').checked;
+            await addTask(title, description, completed);
             e.target.reset();
         });
 
         fetchTasks();
     </script>
 </body>
+
 </html>
