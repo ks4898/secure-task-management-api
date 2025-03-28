@@ -59,8 +59,8 @@ public class Main {
 
     private static boolean isValidTask(Task task) {
         return task != null
-            && task.getTitle() != null && !task.getTitle().trim().isEmpty()
-            && task.getDescription() != null;
+            && task.getTitle() != null && !task.getTitle().trim().isEmpty() && task.getTitle().matches("^[a-zA-Z0-9 ]+$")
+            && task.getDescription() != null && !task.getDescription().trim().isEmpty() && task.getDescription().matches("^[a-zA-Z0-9 ]+$");
     }
 
     private static SslContextFactory.Server getSslContextFactory() {

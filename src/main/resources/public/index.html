@@ -15,6 +15,7 @@
 
         h1 {
             color: #333;
+            text-align: justify;
         }
 
         #taskList {
@@ -31,12 +32,25 @@
 
         #addTaskForm {
             margin-top: 20px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 20px;
         }
 
         input,
         button {
             margin: 5px 0;
             padding: 5px;
+        }
+
+        #addTaskForm label {
+            display: flex;
+            align-items: center;
+        }
+
+        #addTaskForm input[type="checkbox"] {
+            margin-right: 5px;
         }
 
         .delete-btn {
@@ -74,6 +88,10 @@
                 .replace(/'/g, "&#039;");
         }
 
+        function isValidTaskInput(input) {
+            return /^[a-zA-Z0-9 ]+$/.test(input);
+        }
+
         async function fetchTasks() {
             const response = await fetch(`${apiUrl}/tasks`);
             const tasks = await response.json();
@@ -103,8 +121,18 @@
 
         async function editTask(id) {
             const task = await fetchTask(id);
-            const title = prompt('Enter new title:', task.title);
-            const description = prompt('Enter new description:', task.description);
+
+            let title = prompt('Enter new title:', task.title);
+            if (title && !isValidTaskInput(title)) {
+                alert('Task title can only contain letters, numbers, and spaces.');
+                return;
+            }
+
+            let description = prompt('Enter new description:', task.description);
+            if (description && !isValidTaskInput(description)) {
+                alert('Task description can only contain letters, numbers, and spaces.');
+                return;
+            }
             const completed = confirm('Is the task completed?');
 
             if (title !== null && description !== null) {
@@ -114,6 +142,8 @@
                     body: JSON.stringify({ id, title, description, completed })
                 });
                 fetchTasks();
+            } else {
+                alert("Please check your input and try again.");
             }
         }
 
@@ -132,8 +162,23 @@
             const title = document.getElementById('taskTitle').value;
             const description = document.getElementById('taskDescription').value;
             const completed = document.getElementById('taskCompleted').checked;
-            await addTask(title, description, completed);
-            e.target.reset();
+
+            if (!isValidTaskInput(title)) {
+                alert('Task title can only contain letters, numbers, and spaces.');
+                return;
+            }
+
+            if (!isValidTaskInput(description)) {
+                alert('Task description can only contain letters, numbers, and spaces.');
+                return;
+            }
+
+            if (title !== null && description !== null) {
+                await addTask(title, description, completed);
+                e.target.reset();
+            } else {
+                alert("Please check your input and try again.");
+            }         
         });
 
         fetchTasks();
