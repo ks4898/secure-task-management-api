@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Task Management API</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; }
+        #taskList { list-style-type: none; padding: 0; }
+        #taskList li { background-color: #f0f0f0; margin: 10px 0; padding: 10px; border-radius: 5px; }
+        #addTaskForm { margin-top: 20px; }
+        input, button { margin: 5px 0; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Secure Task Management API</h1>
+    <ul id="taskList"></ul>
+    <form id="addTaskForm">
+        <input type="text" id="taskTitle" placeholder="Task Title" required>
+        <input type="text" id="taskDescription" placeholder="Task Description" required>
+        <button type="submit">Add Task</button>
+    </form>
+
+    <script>
+        const apiUrl = 'https://localhost:7000';
+
+        async function fetchTasks() {
+            const response = await fetch(`${apiUrl}/tasks`);
+            const tasks = await response.json();
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.textContent = `${task.title}: ${task.description}`;
+                taskList.appendChild(li);
+            });
+        }
+
+        document.getElementById('addTaskForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('taskTitle').value;
+            const description = document.getElementById('taskDescription').value;
+            await fetch(`${apiUrl}/tasks`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, description })
+            });
+            fetchTasks();
+            e.target.reset();
+        });
+
+        fetchTasks();
+    </script>
+</body>
+</html>

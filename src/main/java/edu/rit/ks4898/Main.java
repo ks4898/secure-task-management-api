@@ -6,17 +6,21 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 import io.javalin.Javalin;
 import io.javalin.http.BadRequestResponse;
 import io.javalin.http.NotFoundResponse;
+import io.javalin.http.staticfiles.Location;
 
 public class Main {
     public static void main(String[] args) {
-        System.setProperty("jsse.enableSNIExtension", "false");
+
         Javalin app = Javalin.create(config -> {
+            config.staticFiles.add("/public", Location.CLASSPATH);
             config.jetty.modifyServer(server -> {
                 ServerConnector sslConnector = new ServerConnector(server, getSslContextFactory());
                 sslConnector.setPort(7000);
                 server.addConnector(sslConnector);
             });
         }).start(7000);
+
+        app.get("/", ctx -> ctx.redirect("index.html"));
 
         app.get("/tasks", ctx -> ctx.json(TaskRepository.getAllTasks()));
 
