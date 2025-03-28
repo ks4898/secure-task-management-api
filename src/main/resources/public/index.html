@@ -11,6 +11,14 @@
         #taskList li { background-color: #f0f0f0; margin: 10px 0; padding: 10px; border-radius: 5px; }
         #addTaskForm { margin-top: 20px; }
         input, button { margin: 5px 0; padding: 5px; }
+        .delete-btn {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -33,20 +41,34 @@
             tasks.forEach(task => {
                 const li = document.createElement('li');
                 li.textContent = `${task.title}: ${task.description}`;
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.onclick = () => deleteTask(task.id);
+                li.appendChild(deleteBtn);
                 taskList.appendChild(li);
             });
         }
 
-        document.getElementById('addTaskForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const title = document.getElementById('taskTitle').value;
-            const description = document.getElementById('taskDescription').value;
+        async function addTask(title, description) {
             await fetch(`${apiUrl}/tasks`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ title, description })
             });
             fetchTasks();
+        }
+
+        async function deleteTask(id) {
+            await fetch(`${apiUrl}/tasks/${id}`, { method: 'DELETE' });
+            fetchTasks();
+        }
+
+        document.getElementById('addTaskForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const title = document.getElementById('taskTitle').value;
+            const description = document.getElementById('taskDescription').value;
+            await addTask(title, description);
             e.target.reset();
         });
 

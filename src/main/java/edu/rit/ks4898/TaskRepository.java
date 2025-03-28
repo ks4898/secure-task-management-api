@@ -1,15 +1,19 @@
 package edu.rit.ks4898;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TaskRepository {
-    private static final Map<String, Task> tasks = new HashMap<>();
+    private static final Map<String, Task> tasks = new ConcurrentHashMap<>();
+    private static final AtomicInteger idCounter = new AtomicInteger(0);
 
     public static void addTask(Task task) {
-        tasks.put(task.getId(), task);
+        String id = String.valueOf(idCounter.incrementAndGet());
+        task.setId(id);
+        tasks.put(id, task);
     }
 
     public static Task getTask(String id) {
