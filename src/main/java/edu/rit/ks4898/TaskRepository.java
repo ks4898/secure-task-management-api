@@ -10,20 +10,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class TaskRepository {
     private static final String STORAGE_FILE = "tasks.dat";
-    private static final Map<String, Task> tasks = loadTasks();
+    private static final Map<String, Task> tasks = new ConcurrentHashMap<>(loadTasks());
+    private static final AtomicInteger idCounter = new AtomicInteger(getMaxId());
+
+    private static int getMaxId() {
+        return tasks.keySet().stream()
+            .mapToInt(Integer::parseInt)
+            .max()
+            .orElse(0);
+    }
 
     private static Map<String, Task> loadTasks() {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(STORAGE_FILE))) {
             @SuppressWarnings("unchecked")
             Map<String, Task> loadedTasks = (ConcurrentHashMap<String, Task>) ois.readObject();
-            return new ConcurrentHashMap<>(loadedTasks);
+            return loadedTasks;
         } catch (FileNotFoundException e) {
             return new ConcurrentHashMap<>();
         } catch (IOException | ClassNotFoundException e) {
-            throw new RuntimeException("Failed to load tasks from storage", e);
+            throw new RuntimeException("Failed to load tasks", e);
         }
     }
 
@@ -31,7 +40,7 @@ public class TaskRepository {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(STORAGE_FILE))) {
             oos.writeObject(tasks);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save tasks to storage", e);
+            throw new RuntimeException("Failed to save tasks", e);
         }
     }
 
@@ -44,7 +53,9 @@ public class TaskRepository {
     }
 
     public static void addTask(Task task) {
-        tasks.put(task.getId(), task);
+        String id = String.valueOf(idCounter.incrementAndGet());
+        task.setId(id);
+        tasks.put(id, task);
         saveTasks();
     }
 
