@@ -52,8 +52,13 @@ public class Main {
         });
 
         app.delete("/tasks/{id}", ctx -> {
-            TaskRepository.deleteTask(ctx.pathParam("id"));
-            ctx.status(204);
+            Task task = TaskRepository.getTask(ctx.pathParam("id"));
+            if(task != null) {
+                TaskRepository.deleteTask(ctx.pathParam("id"));
+                ctx.status(204).json(task);
+            } else {
+                throw new NotFoundResponse("Cannot delete task, task not found");
+            }
         });
     }
 
